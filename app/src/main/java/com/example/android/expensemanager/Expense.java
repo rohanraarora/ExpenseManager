@@ -10,10 +10,17 @@ public class Expense implements Serializable{
 
     private String title;
     private int amount;
+    private int id;
 
     public Expense(String title, int amount) {
         this.title = title;
         this.amount = amount;
+    }
+
+    public Expense(String title, int amount, int id) {
+        this.title = title;
+        this.amount = amount;
+        this.id = id;
     }
 
     public String getTitle() {
@@ -30,5 +37,13 @@ public class Expense implements Serializable{
 
     public void setAmount(int amount) {
         this.amount = amount;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -26,6 +28,7 @@ import java.util.jar.Manifest;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static com.example.android.expensemanager.Constant.KEY_EXPENSE;
+import static com.example.android.expensemanager.Constant.KEY_EXPENSE_ID;
 import static com.example.android.expensemanager.Constant.KEY_POSITION;
 import static com.example.android.expensemanager.Constant.KEY_TITLE;
 
@@ -34,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
     ListView listView;
     ArrayList<Expense> expenses;
     CustomAdapter adapter;
-    BroadcastReceiver br;
 
 
     public final static int REQUEST_DETAIL = 1;
@@ -47,10 +49,33 @@ public class MainActivity extends AppCompatActivity {
 
         listView = (ListView)findViewById(R.id.listView);
         expenses = new ArrayList<>();
-//        for(int i = 0;i<10;i++){
-//            Expense expense = new Expense("Expense" + i,i*100);
-//            expenses.add(expense);
-//        }
+
+
+        ExpenseOpenHelper openHelper = ExpenseOpenHelper.getInstance(getApplicationContext());
+        SQLiteDatabase db = openHelper.getReadableDatabase();
+
+        Cursor cursor = db.query(Contract.EXPENSE_TABLE_NAME,null,null,null,null,null,null);
+        db.delete(Contract.EXPENSE_TABLE_NAME,Contract.EXPENSE_ID + " = ?",new String[]{"1"});
+
+//        String[] columns = new String[]{Contract.EXPENSE_TITLE};
+//        String[] selectionArgs = new String[]{"100","1000"};
+//        db.query(Contract.EXPENSE_TABLE_NAME,columns,Contract.EXPENSE_AMOUNT + " > ? AND "
+//                + Contract.EXPENSE_AMOUNT + " < ?",selectionArgs,null,null,
+//                Contract.EXPENSE_AMOUNT + " DESC");
+
+        while (cursor.moveToNext()){
+
+            String title = cursor.getString(cursor.getColumnIndex(Contract.EXPENSE_TITLE));
+            int amount = cursor.getInt(cursor.getColumnIndex(Contract.EXPENSE_AMOUNT));
+            int id = cursor.getInt(cursor.getColumnIndex(Contract.EXPENSE_ID));
+            Expense expense = new Expense(title,amount,id);
+            expenses.add(expense);
+
+
+        }
+
+        cursor.close();
+
 
         adapter = new CustomAdapter(this, expenses, new CustomAdapter.DeleteButtonClickListener() {
             @Override
@@ -83,15 +108,15 @@ public class MainActivity extends AppCompatActivity {
 //        br = new CustomBroadcastReceiver();
 //        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_LOW);
 //        registerReceiver(br,intentFilter);
-//
+
         super.onStart();
 //        Log.d("Lifecycle Event","Start");
     }
 
     @Override
     protected void onStop() {
+       //aunregisterReceiver(br);
         super.onStop();
-//        unregisterReceiver(br);
     }
 
     @Override
@@ -199,9 +224,24 @@ public class MainActivity extends AppCompatActivity {
             }
         }else if(requestCode == REQUEST_ADD){
             if(resultCode == AddExpenseActivity.ADD_SUCCESS){
-                Expense expense = (Expense) data.getSerializableExtra(KEY_EXPENSE);
-                expenses.add(expense);
-                adapter.notifyDataSetChanged();
+                long id   =  data.getLongExtra(KEY_EXPENSE_ID,-1L);
+                if(id > -1){
+                    ExpenseOpenHelper openHelper = ExpenseOpenHelper.getInstance(getApplicationContext());
+                    SQLiteDatabase db = openHelper.getReadableDatabase();
+
+                    Cursor cursor = db.query(Contract.EXPENSE_TABLE_NAME,null,
+                            Contract.EXPENSE_ID + " = ?",new String[]{id + ""}
+                            ,null,null,null);
+
+                    if(cursor.moveToFirst()){
+                        String title = cursor.getString(cursor.getColumnIndex(Contract.EXPENSE_TITLE));
+                        int amount = cursor.getInt(cursor.getColumnIndex(Contract.EXPENSE_AMOUNT));
+                        Expense expense = new Expense(title,amount,(int)id);
+                        expenses.add(expense);
+                    }
+
+                }
+
             }
         }
 
