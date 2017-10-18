@@ -1,5 +1,6 @@
 package com.example.android.expensemanager;
 
+import android.arch.persistence.room.Room;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
@@ -29,15 +30,22 @@ public class AddExpenseActivity extends AppCompatActivity {
         String amountText = amount.getText().toString();
         int amount = Integer.parseInt(amountText);
 
+        Expense expense = new Expense(titleText,amount);
 
-        ExpenseOpenHelper openHelper = ExpenseOpenHelper.getInstance(getApplicationContext());
-        SQLiteDatabase db = openHelper.getWritableDatabase();
 
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(Contract.EXPENSE_TITLE,titleText);
-        contentValues.put(Contract.EXPENSE_AMOUNT,amount);
+//        ExpenseOpenHelper openHelper = ExpenseOpenHelper.getInstance(getApplicationContext());
+//        SQLiteDatabase db = openHelper.getWritableDatabase();
+//
+//        ContentValues contentValues = new ContentValues();
+//        contentValues.put(Contract.EXPENSE_TITLE,titleText);
+//        contentValues.put(Contract.EXPENSE_AMOUNT,amount);
+//
+//        long id = db.insert(Contract.EXPENSE_TABLE_NAME,null,contentValues);
 
-        long id = db.insert(Contract.EXPENSE_TABLE_NAME,null,contentValues);
+
+        ExpenseDatabase database = ExpenseDatabase.getInstance(this);
+
+        long id = database.getExpenseDao().addExpense(expense);
 
 
 
